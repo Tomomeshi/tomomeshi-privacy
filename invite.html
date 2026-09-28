@@ -63,6 +63,13 @@
     <a class="btn sub" id="open" href="#">もうアプリを入れている人はこちら（アプリで開く）</a>
   </div>
 
+  <!-- タイムカプセルの頼み（2026-09-28・依頼231 の 2）: invite.html?c=<鍵>。**鍵だけで中身は載せない**（店名・顔ぶれ・一言はここに出ない） -->
+  <div class="box" id="capsule" hidden>
+    <h2>2. 入れたら、ここから一言を書く</h2>
+    <p>友だちが、一緒に行った店の「タイムカプセル」に一言を入れてほしいそうです。だれが何を書いたかは、ここには出ません。</p>
+    <a class="btn sub" id="capsuleOpen" href="#">もうアプリを入れている人はこちら（アプリで開いて書く）</a>
+  </div>
+
   <footer>
     <a href="./terms.html">利用規約</a> ・ <a href="./index.html">プライバシーポリシー</a>
   </footer>
@@ -79,6 +86,14 @@
       document.getElementById('handle').textContent = '@' + id;
       document.getElementById('friend').hidden = false;
       document.getElementById('open').setAttribute('href', 'tomomeshi://add-friend?id=' + encodeURIComponent(id));
+    }
+    // タイムカプセルの頼み: invite.html?c=<鍵>。鍵は 64桁の小文字16進だけ（アプリの読み口 capsuleLinkToken と同じ形・ほかは無視）
+    var c = (q.get('c') || '').trim();
+    if (!/^[0-9a-f]{64}$/.test(c)) c = '';
+    if (c) {
+      document.getElementById('title').textContent = 'タイムカプセルに一言入れてほしい、と頼まれています';
+      document.getElementById('capsule').hidden = false;
+      document.getElementById('capsuleOpen').setAttribute('href', 'tomomeshi://capsule?t=' + c);
     }
   })();
 </script>
