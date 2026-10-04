@@ -35,6 +35,11 @@
   .btn.sub { background: transparent; color: #1F6F5C; border: 1.5px solid #1F6F5C; margin-top: 10px; }
   .soon { color: #8A857C; font-size: 14px; margin: 8px 0 0; }
   ol { padding-left: 22px; margin: 8px 0 0; }
+  /* 届いた着せ替えの見本（地の四角に、ボタンと差し色の点2つ。色は住所の th から入れる） */
+  .theme-card { display: flex; align-items: center; gap: 14px; margin: 4px 0 10px; }
+  .theme-swatch { width: 64px; height: 64px; border-radius: 14px; border: 1px solid #E7E1D8; display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding-bottom: 12px; box-sizing: border-box; flex: none; }
+  .theme-dot { width: 14px; height: 14px; border-radius: 7px; border: 1px solid rgba(0,0,0,.12); }
+  .theme-name { font-size: 18px; font-weight: 700; }
   footer { margin-top: 56px; color: #A8A093; font-size: 12px; }
   footer a { color: #8A857C; }
 </style>
@@ -70,6 +75,24 @@
     <a class="btn sub" id="capsuleOpen" href="#">もうアプリを入れている人はこちら（アプリで開いて書く）</a>
   </div>
 
+  <!-- リストが届いた（2026-10-05・依頼333）: invite.html?ls=<店の番号（32桁の16進を , で）>&ln=<名前>&lf=<送った人>。**店の番号だけ**で、店名・記録はここに出さない（アプリで開いた人だけが見る） -->
+  <div class="box" id="list" hidden>
+    <h2>2. 入れたら、アプリで開く</h2>
+    <p id="listLead">リストが届いています。アプリで開くと中の店が見られます。</p>
+    <a class="btn sub" id="listOpen" href="#">もうアプリを入れている人はこちら（アプリで開く）</a>
+  </div>
+
+  <!-- 届いた着せ替え（2026-10-05・依頼326 の 3「友だちに配る」）: invite.html?th=<4色>&tn=<名前>&n=<配った人>&id=<ID>。色と名前だけで、ほかは載せない -->
+  <div class="box" id="theme" hidden>
+    <h2 id="themeStep">2. 入れたら、この着せ替えを使う</h2>
+    <div class="theme-card">
+      <div class="theme-swatch" id="themeSwatch"><span class="theme-dot" id="themeDot1"></span><span class="theme-dot" id="themeDot2"></span></div>
+      <div class="theme-name" id="themeName"></div>
+    </div>
+    <p>トモメシの Pro で使えます。押すと、アプリで同じ色になります。</p>
+    <a class="btn sub" id="themeOpen" href="#">もうアプリを入れている人はこちら（アプリで開いて使う）</a>
+  </div>
+
   <footer>
     <a href="./terms.html">利用規約</a> ・ <a href="./index.html">プライバシーポリシー</a>
   </footer>
@@ -94,6 +117,32 @@
       document.getElementById('title').textContent = 'タイムカプセルに一言入れてほしい、と頼まれています';
       document.getElementById('capsule').hidden = false;
       document.getElementById('capsuleOpen').setAttribute('href', 'tomomeshi://capsule?t=' + c);
+    }
+    // リストが届いた: invite.html?ls=<店の番号>&ln=<名前>&lf=<送った人>。番号は 32桁の16進だけ・30店まで（アプリの読み口 listGiftOf と同じ形・ほかは無視）
+    var ls = (q.get('ls') || '').split(',').filter(function (x) { return /^[0-9a-f]{32}$/i.test(x); }).slice(0, 30);
+    if (ls.length) {
+      var ln = (q.get('ln') || '').trim().slice(0, 30) || 'リスト';
+      var lf = (q.get('lf') || '').trim().slice(0, 20);
+      document.getElementById('title').textContent = (lf ? lf + 'さんから' : '') + '「' + ln + '」のリストが届きました';
+      document.getElementById('listLead').textContent = ls.length + '店のリストです。アプリで開くと中の店が見られます。';
+      document.getElementById('list').hidden = false;
+      document.getElementById('listOpen').setAttribute('href',
+        'tomomeshi://list?ls=' + ls.join(',') + '&ln=' + encodeURIComponent(ln) + (lf ? '&lf=' + encodeURIComponent(lf) : ''));
+    }
+    // 届いた着せ替え: invite.html?th=<地.ボタン.差し色.文字（16進6桁×4）>&tn=<名前>。形が違えば何も出さない（アプリの読み口 themeGiftOf と同じ形）
+    var th = (q.get('th') || '').trim();
+    if (!/^[0-9a-fA-F]{6}(\.[0-9a-fA-F]{6}){3}$/.test(th)) th = '';
+    if (th) {
+      var tc = th.toLowerCase().split('.');
+      var tn = (q.get('tn') || '').replace(/\s+/g, ' ').trim().slice(0, 12) || 'わたしの色';
+      document.getElementById('title').textContent = (name ? name + 'さんから' : '') + '着せ替え「' + tn + '」が届きました';
+      document.getElementById('theme').hidden = false;
+      if (id) document.getElementById('themeStep').textContent = '3. 入れたら、この着せ替えを使う';
+      document.getElementById('themeSwatch').style.background = '#' + tc[0];
+      document.getElementById('themeDot1').style.background = '#' + tc[1];
+      document.getElementById('themeDot2').style.background = '#' + tc[2];
+      document.getElementById('themeName').textContent = tn;
+      document.getElementById('themeOpen').setAttribute('href', 'tomomeshi://theme?c=' + tc.join('.') + '&n=' + encodeURIComponent(tn) + '&f=' + encodeURIComponent(name));
     }
   })();
 </script>
